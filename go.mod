@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/gocolly/colly/v2 v2.1.0
+	github.com/rocketlaunchr/google-search v1.1.6
 	golang.org/x/time v0.3.0
 )
 
