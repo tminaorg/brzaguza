@@ -5,7 +5,7 @@ package qwantsearch_test
 import (
 	"testing"
 
-	qwantsearch "github.com/tminaorg/brzaguza/search/qwantsearch"
+	qwantsearch "github.com/tminaorg/brzaguza/search/qwant"
 )
 
 func TestSearch(t *testing.T) {

@@ -1,6 +1,6 @@
 // Copyright 2020-22 PJ Engineering and Business Solutions Pty. Ltd. All rights reserved.
 
-package googlesearch
+package qwantsearch
 
 import (
 	"context"
