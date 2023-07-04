@@ -12,23 +12,9 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/proxy"
 	"github.com/gocolly/colly/v2/queue"
+
+	"github.com/tminaorg/brzaguza/structures"
 )
-
-// Result represents a single result from Google Search.
-type Result struct {
-
-	// Rank is the order number of the search result.
-	Rank int `json:"rank"`
-
-	// URL of result.
-	URL string `json:"url"`
-
-	// Title of result.
-	Title string `json:"title"`
-
-	// Description of the result.
-	Description string `json:"description"`
-}
 
 const stdBase = "https://www.bing.com/search?q="
 const defaultAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
@@ -66,7 +52,7 @@ type SearchOptions struct {
 }
 
 // Search returns a list of search results from Google.
-func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]Result, error) {
+func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]structures.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -100,7 +86,7 @@ func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]Re
 		limit = int(float64(opts[0].Limit) * 1.5)
 	}
 
-	results := []Result{}
+	results := []structures.Result{}
 	nextPageLink := ""
 	var rErr error
 	filteredRank := 1
@@ -136,7 +122,7 @@ func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]Re
 
 		rank += 1
 		if linkText != "" && linkText != "#" && titleText != "" {
-			result := Result{
+			result := structures.Result{
 				Rank:        filteredRank,
 				URL:         linkText,
 				Title:       titleText,
