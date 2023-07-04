@@ -94,7 +94,9 @@ func main() {
 		Str("query", cli.Query).
 		Msg("Started searching")
 	results := searchAll(cli.Query)
-	for i, r := range results {
-		fmt.Printf("%d:\n\t%d\n\t\"%s\"\n\t\"%s\"\n\t\"%s\"\n", i+1, r.Rank, r.Title, r.URL, r.Description)
+	log.Info().
+		Msg(fmt.Sprintf("Found %d results", len(results)))
+	for _, r := range results {
+		fmt.Printf("-----\n\t\"%s\"\n\t\"%s\"\n\t\"%s\"\n", r.Title, r.URL, r.Description)
 	}
 }
