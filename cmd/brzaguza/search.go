@@ -18,16 +18,13 @@ import (
 )
 
 func searchAll(query string) ([]structures.Result) {
+	// Make concurrency group and channel for results
 	var worker conc.WaitGroup
-	// Make channels for results
 	resultChannel := make(chan structures.Result)
 
 	// Search Google
 	worker.Go(func() {
 		results, err := googlesearch.Search(nil, query)
-		for _, r := range results {
-			resultChannel <- r
-		}
 		if err != nil || len(results) == 0 {
 			if err == nil {
 				err = fmt.Errorf("No results found")
@@ -39,20 +36,26 @@ func searchAll(query string) ([]structures.Result) {
 			// Search Startpage because Google failed
 			worker.Go(func() {
 				results, err := startpagesearch.Search(nil, query)
-				for _, r := range results {
-					resultChannel <- r
-				}
-				if err != nil {
+				if err != nil || len(results) == 0 {
+					if err == nil {
+						err = fmt.Errorf("No results found")
+					}
 					log.Error().
 						Err(err).
 						Msg("Failed searching Startpage")
 				} else {
+					for _, r := range results {
+						resultChannel <- r
+					}
 					log.Debug().
 						Msg("Finished searching Startpage")
 				}
 			})
 
 		} else {
+			for _, r := range results {
+				resultChannel <- r
+			}
 			log.Debug().
 				Msg("Finished searching Google")
 		}
@@ -61,9 +64,6 @@ func searchAll(query string) ([]structures.Result) {
 	// Search Duckduckgo
 	worker.Go(func() {
 		results, err := duckduckgosearch.Search(nil, query)
-		for _, r := range results {
-			resultChannel <- r
-		}
 		if err != nil || len(results) == 0 {
 			if err == nil {
 				err = fmt.Errorf("No results found")
@@ -75,20 +75,26 @@ func searchAll(query string) ([]structures.Result) {
 			// Search Bing because Duckduckgo failed
 			worker.Go(func() {
 				results, err := bingsearch.Search(nil, query)
-				for _, r := range results {
-					resultChannel <- r
-				}
-				if err != nil {
+				if err != nil || len(results) == 0 {
+					if err == nil {
+						err = fmt.Errorf("No results found")
+					}
 					log.Error().
 						Err(err).
 						Msg("Failed searching Bing")
 				} else {
+					for _, r := range results {
+						resultChannel <- r
+					}
 					log.Debug().
 						Msg("Finished searching Bing")
 				}
 			})
 
 		} else {
+			for _, r := range results {
+				resultChannel <- r
+			}
 			log.Debug().
 				Msg("Finished searching Duckduckgo")
 		}
@@ -97,14 +103,17 @@ func searchAll(query string) ([]structures.Result) {
 	// Search Brave
 	worker.Go(func() {
 		results, err := bravesearch.Search(nil, query)
-		for _, r := range results {
-			resultChannel <- r
-		}
-		if err != nil {
+		if err != nil || len(results) == 0 {
+			if err == nil {
+				err = fmt.Errorf("No results found")
+			}
 			log.Error().
 				Err(err).
 				Msg("Failed searching Brave")
 		} else {
+			for _, r := range results {
+				resultChannel <- r
+			}
 			log.Debug().
 				Msg("Finished searching Brave")
 		}
