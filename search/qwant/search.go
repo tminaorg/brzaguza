@@ -137,7 +137,7 @@ func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]st
 
 	})
 
-	c.OnHTML("article.result", func(e *colly.HTMLElement) {
+	c.OnHTML("div[domain]", func(e *colly.HTMLElement) {
 
 		sel := e.DOM
 
