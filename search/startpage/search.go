@@ -21,9 +21,8 @@ const defaultAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.
 
 // SearchOptions modifies how the Search function behaves.
 type SearchOptions struct {
-
-	// CountryCode sets the ISO 3166-1 alpha-2 code of the localized Google Search homepage to use.
-	// The default is "us", which will return results from https://www.google.com.
+	// CountryCode sets the ISO 3166-1 alpha-2 code of the localized Search homepage to use.
+	// The default is "us".
 	CountryCode string
 
 	// LanguageCode sets the language code.
@@ -51,7 +50,7 @@ type SearchOptions struct {
 	FollowNextPage bool
 }
 
-// Search returns a list of search results from Google.
+// Search returns a list of search results.
 func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]structures.Result, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -133,7 +132,6 @@ func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]st
 		}
 
 		// check if there is a next button at the end.
-		// Added this selector as the Id is the same for every language checked on google.com .pt and .es the text changes but the id remains the same
 		nextPageHref, _ := sel.Find("a #pnnext").Attr("href")
 		nextPageLink = strings.TrimSpace(nextPageHref)
 
@@ -144,7 +142,6 @@ func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]st
 		sel := e.DOM
 
 		// check if there is a next button at the end.
-		// Added this selector as the Id is the same for every language checked on google.com .pt and .es the text changes but the id remains the same
 		if nextPageHref, exists := sel.Attr("href"); exists {
 			start := getStart(strings.TrimSpace(nextPageHref))
 			nextPageLink = buildUrl(searchTerm, opts[0].CountryCode, lc, limit, start)

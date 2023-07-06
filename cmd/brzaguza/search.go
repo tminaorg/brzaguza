@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sort"
 	"github.com/sourcegraph/conc"
 	"github.com/hashicorp/go-set"
@@ -23,52 +24,90 @@ func searchAll(query string) ([]structures.Result) {
 
 	// Search Google
 	worker.Go(func() {
-		results, _ := googlesearch.Search(nil, query)
+		results, err := googlesearch.Search(nil, query)
 		for _, r := range results {
 			resultChannel <- r
 		}
-		log.Debug().
-			Msg("Finished searching Google")
-	})
+		if err != nil || len(results) == 0 {
+			if err == nil {
+				err = fmt.Errorf("No results found")
+			}
+			log.Error().
+				Err(err).
+				Msg("Failed searching Google, falling back to Startpage")
+			
+			// Search Startpage because Google failed
+			worker.Go(func() {
+				results, err := startpagesearch.Search(nil, query)
+				for _, r := range results {
+					resultChannel <- r
+				}
+				if err != nil {
+					log.Error().
+						Err(err).
+						Msg("Failed searching Startpage")
+				} else {
+					log.Debug().
+						Msg("Finished searching Startpage")
+				}
+			})
 
-	// Search Startpage
-	worker.Go(func() {
-		results, _ := startpagesearch.Search(nil, query)
-		for _, r := range results {
-			resultChannel <- r
+		} else {
+			log.Debug().
+				Msg("Finished searching Google")
 		}
-		log.Debug().
-			Msg("Finished searching Startpage")
-	})
-
-	// Search Bing
-	worker.Go(func() {
-		results, _ := bingsearch.Search(nil, query)
-		for _, r := range results {
-			resultChannel <- r
-		}
-		log.Debug().
-			Msg("Finished searching Bing")
 	})
 
 	// Search Duckduckgo
 	worker.Go(func() {
-		results, _ := duckduckgosearch.Search(nil, query)
+		results, err := duckduckgosearch.Search(nil, query)
 		for _, r := range results {
 			resultChannel <- r
 		}
-		log.Debug().
-			Msg("Finished searching Duckduckgo")
+		if err != nil || len(results) == 0 {
+			if err == nil {
+				err = fmt.Errorf("No results found")
+			}
+			log.Error().
+				Err(err).
+				Msg("Failed searching Duckduckgo, falling back to Bing")
+			
+			// Search Bing because Duckduckgo failed
+			worker.Go(func() {
+				results, err := bingsearch.Search(nil, query)
+				for _, r := range results {
+					resultChannel <- r
+				}
+				if err != nil {
+					log.Error().
+						Err(err).
+						Msg("Failed searching Bing")
+				} else {
+					log.Debug().
+						Msg("Finished searching Bing")
+				}
+			})
+
+		} else {
+			log.Debug().
+				Msg("Finished searching Duckduckgo")
+		}
 	})
 
 	// Search Brave
 	worker.Go(func() {
-		results, _ := bravesearch.Search(nil, query)
+		results, err := bravesearch.Search(nil, query)
 		for _, r := range results {
 			resultChannel <- r
 		}
-		log.Debug().
-			Msg("Finished searching Brave")
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("Failed searching Brave")
+		} else {
+			log.Debug().
+				Msg("Finished searching Brave")
+		}
 	})
 
 	// Insert results from all searches into HashSet
