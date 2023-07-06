@@ -14,6 +14,7 @@ import (
 	"github.com/tminaorg/brzaguza/search/brave"
 	"github.com/tminaorg/brzaguza/search/duckduckgo"
 	"github.com/tminaorg/brzaguza/search/google"
+	"github.com/tminaorg/brzaguza/search/qwant"
 	"github.com/tminaorg/brzaguza/search/startpage"
 )
 
@@ -116,6 +117,25 @@ func searchAll(query string) ([]structures.Result) {
 			}
 			log.Debug().
 				Msg("Finished searching Brave")
+		}
+	})
+
+	// Search Qwant
+	worker.Go(func() {
+		results, err := qwantsearch.Search(nil, query)
+		if err != nil || len(results) == 0 {
+			if err == nil {
+				err = fmt.Errorf("No results found")
+			}
+			log.Error().
+				Err(err).
+				Msg("Failed searching Qwant")
+		} else {
+			for _, r := range results {
+				resultChannel <- r
+			}
+			log.Debug().
+				Msg("Finished searching Qwant")
 		}
 	})
 
