@@ -155,7 +155,7 @@ func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]st
 
 	})
 
-	c.OnHTML("ol.react-results--main > li > article", func(e *colly.HTMLElement) {
+	c.OnHTML("div.filters > table > tbody > tr", func(e *colly.HTMLElement) {
 
 		sel := e.DOM
 
