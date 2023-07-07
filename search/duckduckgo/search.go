@@ -16,7 +16,7 @@ import (
 	"github.com/tminaorg/brzaguza/structures"
 )
 
-const stdBase = "https://duckduckgo.com/?q="
+const stdBase = "https://lite.duckduckgo.com/lite?q="
 const defaultAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
 
 // SearchOptions modifies how the Search function behaves.
@@ -110,30 +110,48 @@ func Search(ctx context.Context, searchTerm string, opts ...SearchOptions) ([]st
 	})
 
 	// https://www.w3schools.com/cssref/css_selectors.asp
-	c.OnHTML("ol.react-results--main > li > article", func(e *colly.HTMLElement) {
+	c.OnHTML("div.filters > table > tbody", func(e *colly.HTMLElement) {
+		var linkHref  string
+		var linkText  string
+		var titleText string
+		var descText  string
+		counter := 1
+		
+		e.ForEach("tr", func(_ int, el *colly.HTMLElement) {
+			sel := el.DOM
+			switch counter % 4 {
+			case 1:
+				linkHref, _ = sel.Find("a.result-link").Attr("href")
+				titleText = strings.TrimSpace(sel.Find("a.result-link").Text())
+			case 2:
+				descText = strings.TrimSpace(sel.Find("td.result-snippet").Text())
+			case 3:
+				linkText = strings.TrimSpace(sel.Find("span.link-text").Text())
+				if strings.Contains(linkHref, "https") {
+					linkText = "https://" + linkText;
+				} else {
+					linkText = "http://" + linkText;
+				}
+			case 0:
+				rank += 1
+				if linkText != "" && linkText != "#" && titleText != "" {
+					result := structures.Result{
+						Rank:        filteredRank,
+						URL:         linkText,
+						Title:       titleText,
+						Description: descText,
+					}
+					results = append(results, result)
+					filteredRank += 1
+				}
 
-		sel := e.DOM
-
-		linkHref, _ := sel.Find("div > div > a").Attr("href")
-		linkText := strings.TrimSpace(linkHref)
-		titleText := strings.TrimSpace(sel.Find("div > h2 > a > span").Text())
-		descText := strings.TrimSpace(sel.Find("div > div > span").Text())
-
-		rank += 1
-		if linkText != "" && linkText != "#" && titleText != "" {
-			result := structures.Result{
-				Rank:        filteredRank,
-				URL:         linkText,
-				Title:       titleText,
-				Description: descText,
+				// check if there is a next button at the end.
+				nextPageHref, _ := sel.Find("a #pnnext").Attr("href")
+				nextPageLink = strings.TrimSpace(nextPageHref)
 			}
-			results = append(results, result)
-			filteredRank += 1
-		}
 
-		// check if there is a next button at the end.
-		nextPageHref, _ := sel.Find("a #pnnext").Attr("href")
-		nextPageLink = strings.TrimSpace(nextPageHref)
+			counter += 1
+		})
 
 	})
 
